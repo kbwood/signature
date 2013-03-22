@@ -1,0 +1,39 @@
+{
+	"name": "kbw.signature",
+	"title": "jQuery Signature",
+	"description": "This jQuery UI widget captures or draws a signature. * Requires ExplorerCanvas for use in IE. * Converts signature to JSON for transfer or storage.",
+	"keywords": [
+		"canvas",
+		"mouse",
+		"signature",
+		"ui",
+		"widget"
+	],
+	"version": "1.1.0",
+	"author": {
+		"name": "Keith Wood",
+		"url": "http://keith-wood.name/"
+	},
+	"maintainers": [
+		{
+			"name": "Keith Wood",
+			"email": "kbwood@iinet.com.au",
+			"url": "http://keith-wood.name/"
+		}
+	],
+	"licenses": [
+		{
+			"type": "MIT",
+			"url": "https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt"
+		}
+	],
+	"bugs": "https://github.com/kbwood/signature/issues",
+	"homepage": "http://keith-wood.name/signature.html",
+	"docs": "http://keith-wood.name/signatureRef.html",
+	"download": "http://keith-wood.name/signature.html",
+	"dependencies": {
+		"jquery": ">=1.4",
+		"jqueryui": ">=1.8",
+		"excanvas": ">=2006"
+	}
+}

@@ -1,16 +1,13 @@
 /* http://keith-wood.name/signature.html
-   Signature plugin for jQuery UI v1.0.0.
+   Signature plugin for jQuery UI v1.1.0.
    Requires excanvas.js in IE.
    Written by Keith Wood (kbwood{at}iinet.com.au) April 2012.
-   Dual licensed under the GPL (https://github.com/jquery/jquery/blob/master/GPL-LICENSE.txt) and 
-   MIT (https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt) licenses. 
+   Available under the MIT (https://github.com/jquery/jquery/blob/master/MIT-LICENSE.txt) license. 
    Please attribute the author if you use it. */
 
 (function($) { // Hide scope, no $ conflict
 
-/* Signature capture and display.
-   Depends on jquery.ui.widget, jquery.ui.mouse. */
-$.widget('kbw.signature', $.ui.mouse, {
+var signatureOverrides = {
 
 	// Global defaults for signature
 	options: {
@@ -28,8 +25,16 @@ $.widget('kbw.signature', $.ui.mouse, {
 
 	/* Initialise a new signature area. */
 	_create: function() {
-		this.element.addClass(this.widgetBaseClass);
-		if ($.browser.msie) {
+		this.element.addClass(this.widgetFullName || this.widgetBaseClass);
+		try {
+			this.canvas = $('<canvas width="' + this.element.width() + '" height="' +
+				this.element.height() + '">' + this.options.notAvailable + '</canvas>')[0];
+			this.element.append(this.canvas);
+			this.ctx = this.canvas.getContext('2d');
+		}
+		catch (e) {
+			$(this.canvas).remove();
+			this.resize = true;
 			this.canvas = document.createElement('canvas');
 			this.canvas.setAttribute('width', this.element.width());
 			this.canvas.setAttribute('height', this.element.height());
@@ -38,13 +43,8 @@ $.widget('kbw.signature', $.ui.mouse, {
 			if (G_vmlCanvasManager) { // Requires excanvas.js
 				G_vmlCanvasManager.initElement(this.canvas);
 			}
-		}
-		else {
-			this.canvas = $('<canvas width="' + this.element.width() + '" height="' +
-				this.element.height() + '">' + this.options.notAvailable + '</canvas>')[0];
-			this.element.append(this.canvas);
-		}
 		this.ctx = this.canvas.getContext('2d');
+		}
 		this._refresh(true);
 		this._mouseInit();
 	},
@@ -52,7 +52,7 @@ $.widget('kbw.signature', $.ui.mouse, {
 	/* Refresh the appearance of the signature area.
 	   @param  init  (boolean, internal) true if initialising */
 	_refresh: function(init) {
-		if ($.browser.msie) {
+		if (this.resize) {
 			var parent = $(this.canvas);
 			$('div', this.canvas).css({width: parent.width(), height: parent.height()});
 		}
@@ -92,25 +92,31 @@ $.widget('kbw.signature', $.ui.mouse, {
 		if (this.options.syncField) {
 			$(this.options.syncField).val(this.toJSON());
 		}
-		this._trigger('change', event, null);
+		this._trigger('change', event, {});
 	},
 
-	/* Custom option handling.
-	   @param  key    (string) the name of the option being changed
-	   @param  value  (any) its new value */
-	_setOption: function(key, value) {
-		$.Widget.prototype._setOption.apply(this, arguments); // Base widget handling
-		if (key != 'disabled') {
-			this._refresh();
+	/* Custom options handling.
+	   @param  options  (object) the new option values */
+	_setOptions: function(options) {
+		if (this._superApply) {
+			this._superApply(arguments); // Base widget handling
 		}
+		else {
+			$.Widget.prototype._setOptions.apply(this, arguments); // Base widget handling
+		}
+		this._refresh();
+	},
+
+	/* Determine if dragging can start.
+	   @param  event  (Event) the triggering mouse event
+	   @return  (boolean) true if allowed, false if not */
+	_mouseCapture: function(event) {
+		return !this.options.disabled;
 	},
 
 	/* Start a new line.
 	   @param  event  (Event) the triggering mouse event */
 	_mouseStart: function(event) {
-		if (this.options.disabled) {
-			return;
-		}
 		this.offset = this.element.offset();
 		this.offset.left -= document.documentElement.scrollLeft || document.body.scrollLeft;
 		this.offset.top -= document.documentElement.scrollTop || document.body.scrollTop;
@@ -123,9 +129,6 @@ $.widget('kbw.signature', $.ui.mouse, {
 	/* Track the mouse.
 	   @param  event  (Event) the triggering mouse event */
 	_mouseDrag: function(event) {
-		if (this.options.disabled) {
-			return;
-		}
 		var point = [this._round(event.clientX - this.offset.left),
 			this._round(event.clientY - this.offset.top)];
 		this.curLine.push(point);
@@ -139,9 +142,6 @@ $.widget('kbw.signature', $.ui.mouse, {
 	/* End a line.
 	   @param  event  (Event) the triggering mouse event */
 	_mouseStop: function(event) {
-		if (this.options.disabled) {
-			return;
-		}
 		this.lastPoint = null;
 		this.curLine = null;
 		this._changed(event);
@@ -175,10 +175,14 @@ $.widget('kbw.signature', $.ui.mouse, {
 
 	/* Draw a signature from its JSON description.
 	   @param  sigJSON  (object) object with attribute lines
-	                    being an array of arrays of points */
+	                    being an array of arrays of points or
+	                    (string) text version of the JSON */
 	draw: function(sigJSON) {
 		this.clear(true);
-		this.lines = sigJSON.lines;
+		if (typeof sigJSON == 'string') {
+			sigJSON = $.parseJSON(sigJSON);
+		}
+		this.lines = sigJSON.lines || [];
 		var ctx = this.ctx;
 		$.each(this.lines, function() {
 			ctx.beginPath();
@@ -197,16 +201,36 @@ $.widget('kbw.signature', $.ui.mouse, {
 	},
 
 	/* Remove the signature functionality. */
-	destroy: function() {
-		this.element.removeClass(this.widgetBaseClass);
+	_destroy: function() {
+		this.element.removeClass(this.widgetFullName || this.widgetBaseClass);
 		$(this.canvas).remove();
-		this.canvas = null;
-		this.ctx = null;
-		this.lines = null;
+		this.canvas = this.ctx = this.lines = null;
 		this._mouseDestroy();
-		$.Widget.prototype.destroy.call(this); // Base widget handling
-	},
-});
+	}
+};
+
+if (!$.Widget.prototype._destroy) {
+	$.extend(signatureOverrides, {
+		/* Remove the signature functionality. */
+		destroy: function() {
+			this._destroy();
+			$.Widget.prototype.destroy.call(this); // Base widget handling
+		}
+	});
+}
+
+if ($.Widget.prototype._getCreateOptions === $.noop) {
+	$.extend(signatureOverrides, {
+		/* Restore the metadata functionality. */
+		_getCreateOptions: function() {
+			return $.metadata && $.metadata.get(this.element[0])[this.widgetName];
+		}
+	});
+}
+
+/* Signature capture and display.
+   Depends on jquery.ui.widget, jquery.ui.mouse. */
+$.widget('kbw.signature', $.ui.mouse, signatureOverrides);
 
 // Make some things more accessible
 $.kbw.signature.options = $.kbw.signature.prototype.options;
