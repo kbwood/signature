@@ -67,7 +67,7 @@ var signatureOverrides = {
 	/* Clear the signature area.
 	   @param  init  (boolean, internal) true if initialising */
 	clear: function(init) {
-		this.ctx.fillRect(0, 0, this.element.width(), this.element.height());
+		this.ctx.clearRect(0, 0, this.element.width(), this.element.height());
 		if (this.options.guideline) {
 			this.ctx.save();
 			this.ctx.strokeStyle = this.options.guidelineColor;
