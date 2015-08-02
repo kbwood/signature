@@ -1,8 +1,8 @@
 /* http://keith-wood.name/signature.html
-   Signature plugin for jQuery UI v1.1.1.
+   Signature plugin for jQuery UI v1.1.2.
    Requires excanvas.js in IE.
    Written by Keith Wood (kbwood{at}iinet.com.au) April 2012.
-   Available under the MIT (https://github.com/jquery/jquery/blob/master/LICENSE.txt) license. 
+   Available under the MIT (http://keith-wood.name/licence.html) license. 
    Please attribute the author if you use it. */
 
 (function($) { // Hide scope, no $ conflict
@@ -11,6 +11,7 @@ var signatureOverrides = {
 
 	// Global defaults for signature
 	options: {
+		distance: 0, // Minimum distance for a drag
 		background: '#ffffff', // Colour of the background
 		color: '#000000', // Colour of the signature
 		thickness: 2, // Thickness of the lines
@@ -67,7 +68,7 @@ var signatureOverrides = {
 	/* Clear the signature area.
 	   @param  init  (boolean, internal) true if initialising */
 	clear: function(init) {
-		this.ctx.fillRect(0, 0, this.element.width(), this.element.height());
+		this.ctx.clearRect(0, 0, this.element.width(), this.element.height());
 		if (this.options.guideline) {
 			this.ctx.save();
 			this.ctx.strokeStyle = this.options.guidelineColor;
@@ -142,6 +143,10 @@ var signatureOverrides = {
 	/* End a line.
 	   @param  event  (Event) the triggering mouse event */
 	_mouseStop: function(event) {
+		if (this.curLine.length === 1) {
+			event.clientY += this.options.thickness;
+			this._mouseDrag(event);
+		}
 		this.lastPoint = null;
 		this.curLine = null;
 		this._changed(event);

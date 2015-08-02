@@ -9,7 +9,7 @@
 		"ui",
 		"widget"
 	],
-	"version": "1.1.1",
+	"version": "1.1.2",
 	"author": {
 		"name": "Keith Wood",
 		"url": "http://keith-wood.name/"
@@ -24,7 +24,7 @@
 	"licenses": [
 		{
 			"type": "MIT",
-			"url": "https://github.com/jquery/jquery/blob/master/LICENSE.txt"
+			"url": "http://keith-wood.name/licence.html"
 		}
 	],
 	"bugs": "https://github.com/kbwood/signature/issues",
