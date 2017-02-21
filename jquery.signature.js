@@ -5,10 +5,22 @@
    Available under the MIT (http://keith-wood.name/licence.html) license. 
    Please attribute the author if you use it. */
 
+/*
+   
+   Following features added by Marco Janc (marcojanc{at}hotmail.com) February 2017:
+   
+   - responsive
+   - data normalization
+   - signature resizing
+   - signature loading by synchronized field */
+
 (function($) { // Hide scope, no $ conflict
 
 var signatureOverrides = {
 
+	// last canvas dimension for resizing
+	origDim : null, 
+		
 	// Global defaults for signature
 	options: {
 		distance: 0, // Minimum distance for a drag
@@ -21,7 +33,11 @@ var signatureOverrides = {
 		guidelineIndent: 10, // Guide line indent from the edges
 		notAvailable: 'Your browser doesn\'t support signing', // Error message when no canvas
 		syncField: null, // Selector for synchronised text field
-		change: null // Callback when signature changed
+		change: null, // Callback when signature changed
+		responsive : false, // Turns responsive features on, if screen resolution changes the element is resized and current signature redrawn
+		aspectRatio : null, // Aspect ratio on responsive resizing
+		keepSignature : false, // if true the signature is kept on resolution change
+		dataDim : null, // Optional json dimension data is normalized to
 	},
 
 	/* Initialise a new signature area. */
@@ -46,23 +62,102 @@ var signatureOverrides = {
 			}
 			this.ctx = this.canvas.getContext('2d');
 		}
+		
+		// resize on window resize
+		if (this.options.responsive)
+		{
+			this.resize = true;
+			
+			var that = this;
+			var element = this.element;
+			
+	    	$(window).on("resize", function () { $('#' + element[0].id).signature('resizeResponsive'); });
+	    	
+	    	// resize canvas on init if parent has percentage-width like 100% 
+	    	// need timeout since width will be set to 0 or 100px since DOM not yet ready
+	    	// unnecessary if element width, height would be set as property
+			window.setTimeout(function () 
+			{ 
+				var canvas = $(that.canvas);
+
+				that.drawSyncField();
+				that._initOrigDim();
+				
+				element.signature('resizeResponsive');
+		 	}, 500);
+		}
+		else
+		{
+			this.drawSyncField();
+			this._initOrigDim();
+		}
+		
 		this._refresh(true);
 		this._mouseInit();
 	},
+	
+	/* Saves initial dimension for signature resizing */
+	_initOrigDim : function()
+	{
+		// save original dimension for resizing
+		if (this.options.keepSignature)
+		{
+			var canvas = $(this.canvas);
+			this.origDim = [canvas.width(), canvas.height()];
+		}
+	}, 
 
 	/* Refresh the appearance of the signature area.
 	   @param  init  (boolean, internal) true if initialising */
 	_refresh: function(init) {
 		if (this.resize) {
 			var parent = $(this.canvas);
-			$('div', this.canvas).css({width: parent.width(), height: parent.height()});
+			var parentHeight = parent.height();
+			
+			var width = this.element.width();
+			var height = this.element.height();
+
+			// if no aspect ratio specified deduct it from element
+			var aspectRatio = this.options.aspectRatio;
+			if (!aspectRatio)
+				aspectRatio = this.element.width() / this.element.height();
+			
+			// responsive resizing
+			height = Math.round(width / aspectRatio);
+			parentHeight = Math.round(width / aspectRatio);
+			
+			parent.attr('width', width);
+			parent.attr('height', height);
+			$('div', this.canvas).css({width: parent.width(), height: parentHeight});
 		}
-		this.ctx.fillStyle = this.options.background;
-		this.ctx.strokeStyle = this.options.color;
-		this.ctx.lineWidth = this.options.thickness;
+		this._initMainCtx();
+
+		this.clear(init);
+	},
+	
+	/*
+	 * Redraw signature
+	 */
+	resizeResponsive: function()
+	{
+		if (this.options.responsive)
+		{
+			// redraw image after resize
+			var json = this.toJSON();
+			this.resize = true;
+			this._refresh(false);
+			this.draw(json);
+		}
+    }, 
+	
+	/* Initializes the context with the main option */
+	_initMainCtx: function() {
+		var options = this.options;
+		this.ctx.fillStyle = options.background;
+		this.ctx.strokeStyle = options.color;
+		this.ctx.lineWidth = options.thickness;
 		this.ctx.lineCap = 'round';
 		this.ctx.lineJoin = 'round';
-		this.clear(init);
 	},
 
 	/* Clear the signature area.
@@ -82,16 +177,17 @@ var signatureOverrides = {
 			this.ctx.restore();
 		}
 		this.lines = [];
-		if (!init) {
+		if (!init)
 			this._changed();
-		}
 	},
 
 	/* Synchronise changes and trigger change event.
 	   @param  event  (Event) the triggering event */
 	_changed: function(event) {
-		if (this.options.syncField) {
-			$(this.options.syncField).val(this.toJSON());
+		if (this.options.syncField) 
+		{
+			var json = this.lines.length == 0 ? null : this._toNormalizedJSON(this.options.dataDim);
+			$(this.options.syncField).val(json);
 		}
 		this._trigger('change', event, {});
 	},
@@ -114,6 +210,44 @@ var signatureOverrides = {
 	_mouseCapture: function(event) {
 		return !this.options.disabled;
 	},
+	
+	/* 
+	 * Get data point for mouse event
+ 	 * @param  event  (Event) the triggering mouse event */ 
+	_mouseGetPoint : function(event)
+	{
+		var x = event.clientX - this.offset.left;
+		var y = event.clientY - this.offset.top;
+		
+		return [this._round(x), this._round(y)];
+	}, 
+	
+	/* 
+	 * @param encode 
+	 * @param x X-coordinate
+	 * @param y Y-coordinate
+	 * @param dim Dimension to normalize to if responsive
+	 */
+	_convertPoint : function(encode, x, y, dim)
+	{
+		var canvas = $(this.canvas);
+
+		if (dim)
+		{
+			if (encode)
+			{
+				x = (x / canvas.width()) * dim[0];
+				y = (y / canvas.height()) * dim[1];
+			}
+			else
+			{
+				x = (x / dim[0]) * canvas.width();
+				y = (y / dim[1]) * canvas.height();
+			}
+		}
+		
+		return [this._round(x), this._round(y)];
+	},
 
 	/* Start a new line.
 	   @param  event  (Event) the triggering mouse event */
@@ -121,8 +255,8 @@ var signatureOverrides = {
 		this.offset = this.element.offset();
 		this.offset.left -= document.documentElement.scrollLeft || document.body.scrollLeft;
 		this.offset.top -= document.documentElement.scrollTop || document.body.scrollTop;
-		this.lastPoint = [this._round(event.clientX - this.offset.left),
-			this._round(event.clientY - this.offset.top)];
+		
+		this.lastPoint = this._mouseGetPoint(event);
 		this.curLine = [this.lastPoint];
 		this.lines.push(this.curLine);
 	},
@@ -130,8 +264,7 @@ var signatureOverrides = {
 	/* Track the mouse.
 	   @param  event  (Event) the triggering mouse event */
 	_mouseDrag: function(event) {
-		var point = [this._round(event.clientX - this.offset.left),
-			this._round(event.clientY - this.offset.top)];
+		var point = this._mouseGetPoint(event);
 		this.curLine.push(point);
 		this.ctx.beginPath();
 		this.ctx.moveTo(this.lastPoint[0], this.lastPoint[1]);
@@ -162,12 +295,21 @@ var signatureOverrides = {
 	/* Convert the captured lines to JSON text.
 	   @return  (string) the JSON text version of the lines */
 	toJSON: function() {
+		return this._toNormalizedJSON(this.origDim);
+	},
+	
+	/* Convert the captured lines to JSON text.
+	 * @param Resizing dimension if responsive
+	   @return  (string) the JSON text version of the lines */
+	_toNormalizedJSON : function(dim)
+	{
+		var that = this;
 		return '{"lines":[' + $.map(this.lines, function(line) {
 			return '[' + $.map(line, function(point) {
-					return '[' + point + ']';
+					return '[' + that._convertPoint(true, point[0], point[1], dim) + ']';
 				}) + ']';
 		}) + ']}';
-	},
+	}, 
 
 	/* Convert the captured lines to SVG text.
 	   @return  (string) the SVG text version of the lines */
@@ -187,25 +329,62 @@ var signatureOverrides = {
 			'		</g>\n	</g>\n</svg>\n';
 	},
 
+	/* draw signature from synchronized field */
+	drawSyncField : function()
+	{
+		if (this.options.syncField) 
+		{
+			var json = $(this.options.syncField).val();
+			if (json.trim() != "")
+				this._draw(json, this.options.dataDim);
+		}
+	}, 
+	
 	/* Draw a signature from its JSON description.
 	   @param  sigJSON  (object) object with attribute lines
 	                    being an array of arrays of points or
 	                    (string) text version of the JSON */
 	draw: function(sigJSON) {
+		this._draw(sigJSON, this.origDim);
+		this._changed();
+	},
+
+
+	/* Draw a signature from its JSON description and the given dimension.
+	 * 
+	   @param  sigJSON  (object) object with attribute lines
+	                    being an array of arrays of points or
+	                    (string) text version of the JSON 
+       @param dimension*/
+	_draw : function(sigJSON, dim) {
 		this.clear(true);
 		if (typeof sigJSON === 'string') {
-			sigJSON = $.parseJSON(sigJSON);
+			try {
+				sigJSON = $.parseJSON(sigJSON);
+			}
+			catch(err) {
+			    return;
+			}
 		}
+
 		this.lines = sigJSON.lines || [];
 		var ctx = this.ctx;
+		var that = this;
+		
+		// init context - if responsive options were lost
+		this._initMainCtx();
+
 		$.each(this.lines, function() {
 			ctx.beginPath();
+
 			$.each(this, function(i) {
+				var point = that._convertPoint(false, this[0], this[1], dim);
+				this[0] = point[0];
+				this[1] = point[1];
 				ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0], this[1]);
 			});
 			ctx.stroke();
 		});
-		this._changed();
 	},
 
 	/* Determine whether or not any drawing has occurred.
@@ -248,5 +427,6 @@ $.widget('kbw.signature', $.ui.mouse, signatureOverrides);
 
 // Make some things more accessible
 $.kbw.signature.options = $.kbw.signature.prototype.options;
+$.kbw.signature.origDim = $.kbw.signature.prototype.origDim;
 
 })(jQuery);
