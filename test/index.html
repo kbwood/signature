@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de" xmlns="http://www.w3.org/1999/xhtml">
+<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		
+		<link type="text/css" rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+		
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+		
+		<link type="text/css" rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.css" />
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.5/jquery.mobile.min.js"></script>
+
+		<script type="text/javascript">$(document).on('mobileinit', function(){$.mobile.ajaxEnabled = false;$.mobile.pushStateEnabled = false;$.mobile.page.prototype.options.domCache = true;});</script>
+		
+		<link type="text/css" rel="stylesheet" href="resources/primefaces/mobile/primefaces-mobile.css" />
+		<script type="text/javascript" src="resources/primefaces/core.js"></script>
+		<script type="text/javascript" src="resources/primefaces/components-mobile.js"></script>
+		<script type="text/javascript" src="resources/primefaces/jquery/jquery-plugins.js"></script>
+		
+		<script type="text/javascript" src="../jquery.signature.js"></script>
+	</head>
+	<body>
+		<div style="margin: 1em;">
+			
+			<h2>1. Data range normalization</h2>
+
+			
+			<p>
+				Dimension of input canvas is 600 x 300. Create a point exactly at right bottom corner 600 x 300.
+				With data normalization active, the final json point is 400 x 200 instead.
+			</p>
+			<p>
+				This is useful in case you capture data from multiple applications or have responsive layout like on a mobile 
+				device where you switch between landscape and portrait view and want to save normalized data.
+			</p>
+			
+			<h3>Json</h3>
+			<textarea id="receiptSignatureJson" rows="8" cols="4" style="width: 600px; height: 300px;"></textarea>
+			
+			<h3>Input</h3>
+			<div id="receiptSignatureInputId" style="width: 600px; height: 300px;" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset ui-field-right margin-child-remove"></div>
+
+			<script type="text/javascript">
+
+				var receiptSignatureInput = $('#receiptSignatureInputId')
+				receiptSignatureInput.signature(
+				{ 
+					guideline : true, 
+					thickness : 3, 
+					syncField : $('#receiptSignatureJson'),
+					dataDim : [400, 200]
+				});
+			</script>
+
+			
+			<h2>2. Responsive - width</h2>
+			
+			<p>
+				Responsive behavior activated with fixed height.
+			</p>
+			
+			<div id="receiptSignatureResponsiveWidthInputId" style="height: 300px; width: 100%;" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset ui-field-right margin-child-remove"></div>
+
+			<script type="text/javascript">
+
+				var receiptSignatureInput = $('#receiptSignatureResponsiveWidthInputId')
+				receiptSignatureInput.signature(
+				{ 
+					guideline : true, 
+					thickness : 3, 
+					responsive : true
+				});
+			</script>
+			
+			<h2>3. Responsive - width + height</h2>
+			
+			<p>
+				Responsive behavior activated with dynamic height using aspect ratio. 
+				Useful when switching between landscape and portrait view on mobile device.
+			</p>
+			
+			<div id="receiptSignatureResponsiveWidthHeightInputId" style="width: 100%;" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset ui-field-right margin-child-remove"></div>
+
+			<script type="text/javascript">
+
+				var receiptSignatureInput = $('#receiptSignatureResponsiveWidthHeightInputId')
+				receiptSignatureInput.signature(
+				{ 
+					guideline : true, 
+					thickness : 3, 
+					responsive : true,
+					aspectRatio : 2,
+				});
+			</script>
+			
+			<h2>4. Responsive - width + height + signature resizing</h2>
+			
+			<p>
+				Responsive behavior activated with dynamic height using aspect ratio. 
+				Useful when switching between landscape and portrait view on mobile device.
+				Best seen if a square is drawn in the middle or a dot in bottom right corner and window is resized.
+			</p>
+			
+			<div id="receiptSignatureResponsiveWidthHeightResizeInputId" style="width: 100%;" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset ui-field-right margin-child-remove"></div>
+
+			<script type="text/javascript">
+
+				var receiptSignatureInput = $('#receiptSignatureResponsiveWidthHeightResizeInputId')
+				receiptSignatureInput.signature(
+				{ 
+					guideline : true, 
+					thickness : 3, 
+					responsive : true,
+					aspectRatio : 2,
+					keepSignature : true,
+				});
+			</script>
+			
+			
+			<h2>5. All features</h2>
+			
+			<h3>Json</h3>
+			<textarea id="receiptSignatureAllJson" rows="8" cols="4" style="width: 600px; height: 300px;"></textarea>
+			
+			<h3>Input</h3>
+			
+			<div id="receiptSignatureAllInputId" style="width: 100%;" class="ui-input-text ui-body-inherit ui-corner-all ui-shadow-inset ui-field-right margin-child-remove"></div>
+
+			<script type="text/javascript">
+
+				var receiptSignatureInput = $('#receiptSignatureAllInputId')
+				receiptSignatureInput.signature(
+				{ 
+					guideline : true, 
+					thickness : 3, 
+					responsive : true,
+					aspectRatio : 2,
+					keepSignature : true, 
+					syncField : $('#receiptSignatureAllJson'),
+					dataDim : [400, 200]
+				});
+			</script>
+			
+			</div>
+		</body>
+</html>
