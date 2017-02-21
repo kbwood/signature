@@ -6,3 +6,6 @@ This plugin sets a div to allow capture of a signature and converts it to JSON o
 Have a look at the plugin Web site, http://keith-wood.name/signature.html, for demonstrations of its abilities.
 
 For documentation on the functionality see http://keith-wood.name/signatureRef.html.
+
+
+Responsive Demo: http://htmlpreview.github.io/?https://github.com/djmj/signature/blob/master/test/index.html
