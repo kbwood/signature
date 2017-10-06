@@ -1,0 +1,33 @@
+{
+	"name": "kbw-signature",
+	"description": "This plugin provides a canvas to capture and display a signature.",
+	"keywords": [
+		"canvas",
+		"input",
+		"jQuery",
+		"jQuery UI",
+		"signature",
+		"validation"
+	],
+	"homepage": "https://github.com/kbwood/signature",
+	"authors": [
+		"Keith Wood <wood.keith@optusnet.com.au> (http://keith-wood.name)"
+	],
+	"licence": "MIT",
+	"main": [
+		"src/css/jquery.signature.css",
+		"src/js/jquery.signature.js"
+	],
+	"ignore": [
+		"**/.*",
+		"node_modules",
+		"src/bower_components"
+	],
+	"dependencies": {
+		"jquery": ">=1.12.0",
+		"jquery-ui": ">=1.12.0"
+	},
+	"devDependencies": {
+		"qunit": "~1.23"
+	}
+}

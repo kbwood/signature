@@ -9,7 +9,7 @@
 		"ui",
 		"widget"
 	],
-	"version": "1.1.2",
+	"version": "1.2.0",
 	"author": {
 		"name": "Keith Wood",
 		"url": "http://keith-wood.name/"
@@ -17,7 +17,7 @@
 	"maintainers": [
 		{
 			"name": "Keith Wood",
-			"email": "kbwood@iinet.com.au",
+			"email": "wood.keith@optusnet.com.au",
 			"url": "http://keith-wood.name/"
 		}
 	],
@@ -32,8 +32,8 @@
 	"docs": "http://keith-wood.name/signatureRef.html",
 	"download": "http://keith-wood.name/signature.html",
 	"dependencies": {
-		"jquery": ">=1.4",
-		"jqueryui": ">=1.8",
+		"jquery": ">=1.12",
+		"jqueryui": ">=1.12",
 		"excanvas": ">=2006"
 	}
 }
