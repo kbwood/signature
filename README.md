@@ -7,5 +7,9 @@ Have a look at the plugin Web site, http://keith-wood.name/signature.html, for d
 
 For documentation on the functionality see http://keith-wood.name/signatureRef.html.
 
+Responsive
+================
+
+The original plugin file 'jquery.signature.js' was enhanced with responsive and data normalization features. 
 
 Responsive Demo: http://htmlpreview.github.io/?https://github.com/djmj/signature/blob/master/test/index.html
