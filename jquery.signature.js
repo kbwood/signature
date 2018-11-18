@@ -71,7 +71,9 @@ var signatureOverrides = {
 			var that = this;
 			var element = this.element;
 			
-	    	$(window).on("resize", function () { $('#' + element[0].id).signature('resizeResponsive'); });
+	    	$(window).on("resize", function () { 
+	    		$(element[0]).signature('resizeResponsive'); 
+		});
 	    	
 	    	// resize canvas on init if parent has percentage-width like 100% 
 	    	// need timeout since width will be set to 0 or 100px since DOM not yet ready
