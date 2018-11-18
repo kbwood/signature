@@ -10,6 +10,8 @@ For documentation on the functionality see http://keith-wood.name/signatureRef.h
 Responsive
 ================
 
-The original plugin file 'jquery.signature.js' was enhanced with responsive and data normalization features. 
+This fork enhances the plugin with responsive and data normalization features. 
 
 Responsive Demo: http://htmlpreview.github.io/?https://github.com/djmj/signature/blob/master/test/index.html
+
+The only changed file is: 'jquery.signature.js' 
