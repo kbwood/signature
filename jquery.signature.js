@@ -3,9 +3,7 @@
    Requires excanvas.js in IE.
    Written by Keith Wood (kbwood{at}iinet.com.au) April 2012.
    Available under the MIT (http://keith-wood.name/licence.html) license. 
-   Please attribute the author if you use it. */
-
-/*
+   Please attribute the author if you use it. 
    
    Following features added by Marco Janc (marcojanc{at}hotmail.com) February 2017:
    
@@ -70,10 +68,11 @@ var signatureOverrides = {
 			
 			var that = this;
 			var element = this.element;
-			
-	    	$(window).on("resize", function () { 
-	    		$(element[0]).signature('resizeResponsive'); 
-		});
+
+			// DOM must be ready since resize may be called prior to initalia
+			$(window).on("resize" + this.eventNamespace, function () { 
+	    		element.signature('resizeResponsive'); 
+			});
 	    	
 	    	// resize canvas on init if parent has percentage-width like 100% 
 	    	// need timeout since width will be set to 0 or 100px since DOM not yet ready
@@ -401,6 +400,10 @@ var signatureOverrides = {
 		$(this.canvas).remove();
 		this.canvas = this.ctx = this.lines = null;
 		this._mouseDestroy();
+		
+		// remove resize handler
+		if (this.options.responsive)
+			$(window).off("resize" + this.eventNamespace);
 	}
 };
 
