@@ -12,6 +12,6 @@ Responsive
 
 This fork enhances the plugin with responsive and data normalization features. 
 
-Responsive Demo: http://htmlpreview.github.io/?https://github.com/djmj/signature/blob/master/test/index.html
+Responsive Demo: https://admin.deloma.de/sites/mobile/testSignature.xhtml
 
 The only changed file is: 'jquery.signature.js' 
