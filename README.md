@@ -14,4 +14,4 @@ This fork enhances the plugin with responsive and data normalization features.
 
 Responsive Demo: https://admin.deloma.de/sites/mobile/testSignature.xhtml
 
-The only changed file is: 'jquery.signature.js' 
+The only relevant changed file is: **jquery.signature.js**
