@@ -1,5 +1,5 @@
 /*! http://keith-wood.name/signature.html
-	Signature plugin for jQuery UI v1.2.0.
+	Signature plugin for jQuery UI v1.2.1.
 	Requires excanvas.js in IE.
 	Written by Keith Wood (wood.keith{at}optusnet.com.au) April 2012.
 	Available under the MIT (http://keith-wood.name/licence.html) license. 
@@ -40,6 +40,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@property {number} [guidelineIndex=10] The guideline indent (pixels) from the edges.
 			@property {string} [notAvailable='Your browser doesn\'t support signing']
 								The error message to show when no canvas is available.
+			@property {number} [scale=1] A scaling factor for rendering the signature (only applies to redraws).
 			@property {string|Element|jQuery} [syncField=null] The selector, DOM element, or jQuery object
 								for a field to automatically synchronise with a text version of the signature.
 			@property {string} [syncFormat='JSON'] The output representation: 'JSON', 'SVG', 'PNG', 'JPEG'.
@@ -56,6 +57,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			guidelineOffset: 50,
 			guidelineIndent: 10,
 			notAvailable: 'Your browser doesn\'t support signing',
+			scale: 1,
 			syncField: null,
 			syncFormat: 'JSON',
 			svgStyles: false,
@@ -116,6 +118,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			if (this.options.disabled) {
 				return;
 			}
+			this.ctx.clearRect(0, 0, this.element.width(), this.element.height());
 			this.ctx.fillRect(0, 0, this.element.width(), this.element.height());
 			if (this.options.guideline) {
 				this.ctx.save();
@@ -302,11 +305,11 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			}
 			this.clear(true);
 			if (typeof sig === 'string' && sig.indexOf('data:') === 0) { // Data URL
-				this._drawDataURL(sig);
+				this._drawDataURL(sig, this.options.scale);
 			} else if (typeof sig === 'string' && sig.indexOf('<svg') > -1) { // SVG
-				this._drawSVG(sig);
+				this._drawSVG(sig, this.options.scale);
 			} else {
-				this._drawJSON(sig);
+				this._drawJSON(sig, this.options.scale);
 			}
 			this._changed();
 		},
@@ -315,8 +318,9 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			@memberof Signature
 			@private
 			@param {object|string} sig An object with attribute <code>lines</code> being an array of arrays of points
-							or the text version of the JSON. */
-		_drawJSON: function(sig) {
+							or the text version of the JSON.
+			@param {number} scale A scaling factor. */
+		_drawJSON: function(sig, scale) {
 			if (typeof sig === 'string') {
 				sig = $.parseJSON(sig);
 			}
@@ -325,7 +329,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			$.each(this.lines, function() {
 				ctx.beginPath();
 				$.each(this, function(i) {
-					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0], this[1]);
+					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0] * scale, this[1] * scale);
 				});
 				ctx.stroke();
 			});
@@ -334,8 +338,9 @@ $(selector).signature({color: 'blue', guideline: true}) */
 		/** Draw a signature from its SVG description.
 			@memberof Signature
 			@private
-			@param {string} sig The text version of the SVG. */
-		_drawSVG: function(sig) {
+			@param {string} sig The text version of the SVG.
+			@param {number} scale A scaling factor. */
+		_drawSVG: function(sig, scale) {
 			var lines = this.lines = [];
 			$(sig).find('polyline').each(function() {
 				var line = [];
@@ -349,7 +354,7 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			$.each(this.lines, function() {
 				ctx.beginPath();
 				$.each(this, function(i) {
-					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0], this[1]);
+					ctx[i === 0 ? 'moveTo' : 'lineTo'](this[0] * scale, this[1] * scale);
 				});
 				ctx.stroke();
 			});
@@ -359,12 +364,13 @@ $(selector).signature({color: 'blue', guideline: true}) */
 			<p>Note that this does not reconstruct the internal representation!</p>
 			@memberof Signature
 			@private
-			@param {string} sig The <code>data:</code> URL containing an image. */
-		_drawDataURL: function(sig) {
+			@param {string} sig The <code>data:</code> URL containing an image.
+			@param {number} scale A scaling factor. */
+		_drawDataURL: function(sig, scale) {
 			var image = new Image();
 			var context = this.ctx;
 			image.onload = function() {
-				context.drawImage(this, 0, 0);
+				context.drawImage(this, 0, 0, image.width * scale, image.height * scale);
 			};
 			image.src = sig;
 		},
